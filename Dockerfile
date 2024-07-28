@@ -51,6 +51,7 @@ RUN mkdir -p /var/log/nginx && chown -R www-data:www-data /var/log/nginx
 
 # Exponha a porta 9001 para o Supervisor
 EXPOSE 9001
+EXPOSE 80
 
 # Defina o comando para iniciar o Supervisor
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
