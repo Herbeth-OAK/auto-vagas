@@ -1,52 +1,51 @@
-FROM python:3.9-slim
+# Use uma imagem base do Python
+FROM python:3.10-slim
 
 # Install dependencies
 RUN apt-get update && apt-get install -y \
-    cron \
     wget \
-    gnupg2 \
     unzip \
+    gnupg \
+    apt-transport-https \
+    ca-certificates \
     curl \
-    && rm -rf /var/lib/apt/lists/*
+    --no-install-recommends && \
+    rm -rf /var/lib/apt/lists/*
 
-# Add Google Chrome PPA and install Google Chrome
-RUN curl -sSL https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
-    && apt-get update \
-    && apt-get install -y google-chrome-stable
+# Install Chrome and ChromeDriver
+RUN apt-get update && apt-get install -y wget gnupg2 \
+    && wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    && wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
+    && apt-get install -y ./google-chrome-stable_current_amd64.deb \
+    && rm google-chrome-stable_current_amd64.deb \
+    && apt-get install -yqq unzip \
+    && wget -O /tmp/chromedriver.zip https://storage.googleapis.com/chrome-for-testing-public/127.0.6533.72/linux64/chromedriver-linux64.zip \
+    && unzip /tmp/chromedriver.zip chromedriver-linux64/chromedriver -d /usr/local/bin/
 
-# Install ChromeDriver
-RUN CHROME_DRIVER_VERSION=$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE) \
-    && wget -O /tmp/chromedriver.zip https://chromedriver.storage.googleapis.com/${CHROME_DRIVER_VERSION}/chromedriver_linux64.zip \
-    && unzip /tmp/chromedriver.zip -d /usr/local/bin/ \
-    && rm /tmp/chromedriver.zip
 
 # Set display port to avoid crash
 ENV DISPLAY=:99
 
-# Set the working directory
+
+# Defina o diretório de trabalho
 WORKDIR /app
 
-# Copy the requirements file
-COPY requirements.txt requirements.txt
+# Copie os arquivos de requisitos e instale as dependências
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Install Python dependencies
-RUN pip install -r requirements.txt
-
-# Copy the application code
+# Copie o restante do código para o contêiner
 COPY . .
 
-# Copy crontab file to the cron.d directory
-COPY crontab /etc/cron.d/crontab
 
-# Give execution rights on the cron job
-RUN chmod 0644 /etc/cron.d/crontab
+# Instale o Supervisor
+RUN apt-get update && apt-get install -y supervisor
 
-# Apply cron job
-RUN crontab /etc/cron.d/crontab
+# Configure o Supervisor
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Create the log file to be able to run tail
-RUN touch /var/log/cron.log
+# Exponha a porta 9001 para o Supervisor
+EXPOSE 9001
 
-# Run the command on container startup
-CMD cron && tail -f /var/log/cron.log
+# Defina o comando para iniciar o Supervisor
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
