@@ -1,4 +1,3 @@
-import logging
 import time
 import telebot
 import random
@@ -17,8 +16,6 @@ TOKEN = os.getenv('TOKEN')
 CHAT_ID = os.getenv('CHAT_ID')
 bot = telebot.TeleBot(TOKEN)
 
-# Configure logging settings
-logging.basicConfig(filename="scraping.log", level=logging.INFO)
 
 def shorten_url(long_url: str) -> str:
     try:
@@ -26,11 +23,9 @@ def shorten_url(long_url: str) -> str:
         short_url = type_tiny.tinyurl.short(long_url)
         return short_url
     except Exception as e:
-        logging.error(f"Error shortening URL {long_url}: {str(e)}")
         return long_url
 
 def scrape_linkedin_jobs(job_title: str, location: str, pages: int = 1) -> list:
-    logging.info(f'Starting LinkedIn job scrape for "{job_title}" in "{location}"...')
     pages = pages or 1
 
     options = webdriver.ChromeOptions()
@@ -44,7 +39,6 @@ def scrape_linkedin_jobs(job_title: str, location: str, pages: int = 1) -> list:
     driver.get(f"https://www.linkedin.com/jobs/search/?keywords={job_title}&location={location}&f_TPR=&f_WT=3%2C2")
 
     for i in range(pages):
-        logging.info(f"Scrolling to bottom of page {i+1}...")
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
         try:
@@ -55,7 +49,6 @@ def scrape_linkedin_jobs(job_title: str, location: str, pages: int = 1) -> list:
             )
             element.click()
         except Exception:
-            logging.info("Show more button not found, stopping scrolling...")
             break
         time.sleep(random.uniform(3, 7))
 
@@ -82,14 +75,11 @@ def scrape_linkedin_jobs(job_title: str, location: str, pages: int = 1) -> list:
                     "link": shorten_url(apply_link),
                 }
             )
-            logging.info(f'Scraped "{job_title}" at {job_company} in {job_location}...')
     except Exception as e:
-        logging.error(f"An error occurred while scraping jobs: {str(e)}")
+
         return jobs
 
-    logging.info('Closing driver')
     driver.quit()
-    logging.info('Returning from function')
     send_jobs_to_telegram(jobs)
 
 def send_jobs_to_telegram(jobs: list) -> None:
