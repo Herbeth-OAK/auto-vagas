@@ -47,7 +47,10 @@ RUN apt-get update && apt-get install -y supervisor
 # Configure o Supervisor
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
+# Copy the worker script and give execution permission
 COPY worker.sh /usr/local/bin/worker.sh
+RUN chmod +x /usr/local/bin/worker.sh
+
 
 RUN mkdir -p /var/log/nginx && chown -R www-data:www-data /var/log/nginx
 
