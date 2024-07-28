@@ -8,10 +8,12 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from dotenv import load_dotenv
 
-# Telegram bot setup
-TOKEN = '5590110990:AAF81UkbP2-i_8WZia698z5ZMZnNeFKUM44'
-CHAT_ID = '-4045663296'
+load_dotenv()
+
+TOKEN = os.getenv('TOKEN')
+CHAT_ID = os.getenv('CHAT_ID')
 bot = telebot.TeleBot(TOKEN)
 
 # Configure logging settings
