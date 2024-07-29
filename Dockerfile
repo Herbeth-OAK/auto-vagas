@@ -47,10 +47,11 @@ RUN apt-get update && apt-get install -y supervisor
 # Configure o Supervisor
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Copy the worker script and give execution permission
-COPY worker.sh /usr/local/bin/worker.sh
-RUN chmod +x /usr/local/bin/worker.sh
+# Copia o script de entrada
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 
+# Adiciona permissões de execução ao script de entrada
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 RUN mkdir -p /var/log/nginx && chown -R www-data:www-data /var/log/nginx
 
@@ -59,4 +60,6 @@ EXPOSE 9001
 EXPOSE 80
 
 # Defina o comando para iniciar o Supervisor
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+#CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
