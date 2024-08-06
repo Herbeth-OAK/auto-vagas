@@ -1,6 +1,3 @@
-beautifulsoup4
-selenium
-telebot
-apscheduler
-pyshorteners
-python-dotenv
+python-telegram-bot==20.3
+telethon==1.29.1
+python-dotenv==1.0.0
