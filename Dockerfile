@@ -4,6 +4,7 @@ FROM python:3.10-slim
 # Instala dependências do sistema
 RUN apt-get update && apt-get install -y \
     nginx \
+    curl \
     supervisor \
     && rm -rf /var/lib/apt/lists/*
 
@@ -17,9 +18,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copia os arquivos do projeto para o container
 COPY . .
 
-# Configura o Nginx
-RUN rm /etc/nginx/sites-enabled/default
-COPY nginx.conf /etc/nginx/nginx.conf
 
 # Adicione esta linha ao Dockerfile
 COPY session_name.session /app/session_name.session
